@@ -85,3 +85,32 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 ---
 
 Built with ❤️ using React Router.
+
+## run on docker
+```shell
+docker build -f Dockerfile -t nbox-ui:runner --target runner .
+docker run --network host -e COOKIE_SECRET=1234567890plmnhytgvfredcxswqaz -e BASE_URL=http://127.0.0.1:7337 -p 3000:3000 -it nbox-ui:runner
+```
+
+
+## Development
+
+```shell
+export COOKIE_SECRET=1234567890plmnhytgvfredcxswqaz
+export BASE_URL=http://127.0.0.1:7337
+
+```
+
+
+## UPDATE npm
+
+```shell
+npm install -g npm-check-updates
+ncu -u
+npm install
+```
+
+### add componets
+```shell
+npx shadcn@latest add [name]
+```

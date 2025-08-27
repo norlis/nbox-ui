@@ -1,16 +1,47 @@
 import {
+  data,
   isRouteErrorResponse,
   Links,
+  type LoaderFunctionArgs,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
-import type { Route } from "./+types/root";
+import type {Route} from "./+types/root";
 import "./app.css";
+import type {ReactNode} from "react";
+import {Toaster} from "~/components/ui/sonner";
+import {LayoutProvider} from "~/context/layout-context";
+import {TreeProvider} from "~/context/tree-context";
+import {MainLayout} from "~/components/layout/main-layout";
+import {decodeToken, getAuthFromRequest} from "~/adapters/auth";
+import {GlobalLoading} from "~/components/global-loading";
+
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const token = await getAuthFromRequest(request);
+  const claims = await decodeToken(token)
+  return data(claims)
+}
+
+
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "nbox" },
+    { name: "description", content: "Welcome to nbox!" },
+  ];
+}
 
 export const links: Route.LinksFunction = () => [
+  {
+    rel: "icon",
+    href: "/favicon.png",
+    type: "image/png",
+  },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -19,11 +50,11 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap",
   },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -34,17 +65,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <GlobalLoading />
         <ScrollRestoration />
+        <Toaster  richColors theme="dark" position="top-right" closeButton />
         <Scripts />
       </body>
     </html>
   );
 }
 
-export default function App() {
-  return <Outlet />;
-}
+export default function App(){
+  const claims = useLoaderData<typeof loader>();
 
+  return (
+      <LayoutProvider>
+         <TreeProvider >
+           <MainLayout username={claims?.username || ""}>
+            <Outlet/>
+           </MainLayout>
+         </TreeProvider>
+       </LayoutProvider>
+
+  )
+}
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
