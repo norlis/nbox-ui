@@ -82,6 +82,14 @@ Make sure to deploy the output of `npm run build`
 
 This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
 
+## reference
+- [radix-ui](https://www.radix-ui.com)
+- [remix js](https://remix.run/docs/en/main)
+- [shadcn ui](https://ui.shadcn.com/docs)
+- [tailwindcss](https://tailwindcss.com/docs/installation)
+- [Remix Guide](https://remix.guide)
+
+
 ---
 
 Built with ❤️ using React Router.
