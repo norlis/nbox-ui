@@ -27,7 +27,7 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!result.success) {
         return data<EntryActionResponse>({
             status: 'validation_error',
-            errors: result.error
+            errors: result.error.flatten()
         }, { status: 400 });
     }
 

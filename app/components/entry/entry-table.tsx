@@ -1,6 +1,7 @@
 import {EditableRow} from "./editable-row"
 import type {EntriesEditable, EntryEditable} from "~/domain/entry";
 import {Card, CardContent} from "~/components/ui/card";
+import {useEffect, useRef, useState} from "react";
 
 
 interface TableProps {
@@ -18,32 +19,78 @@ interface TableProps {
 
 
 export function EntryTable({
-                                         entries,
-                                         editableCount,
-                                         changes,
-                                         revealedSecrets,
-                                         editingEntries,
-                                         onToggleVisibility,
-                                         onEditEntry,
-                                         onSaveEntry,
-                                         onCancelEdit,
-                                         onUpdateEntry,
-                                     }: TableProps) {
+                               entries,
+                               editableCount,
+                               changes,
+                               revealedSecrets,
+                               editingEntries,
+                               onToggleVisibility,
+                               onEditEntry,
+                               onSaveEntry,
+                               onCancelEdit,
+                               onUpdateEntry,
+                           }: TableProps) {
+    const [isScrolled, setIsScrolled] = useState(false)
+    const tableContainerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (tableContainerRef.current) {
+                const scrollTop = tableContainerRef.current.scrollTop
+                setIsScrolled(scrollTop > 0)
+            }
+        }
+
+        const container = tableContainerRef.current
+        if (container) {
+            container.addEventListener("scroll", handleScroll)
+            return () => container.removeEventListener("scroll", handleScroll)
+        }
+    }, [])
+
     return (
-        <Card className="bg-slate-800/50 border-slate-700 shadow-2xl backdrop-blur-sm">
-            <CardContent className="p-0">
-                <div className="overflow-x-auto">
+        // <Card className="bg-slate-800/50 border-slate-700 shadow-2xl backdrop-blur-sm">
+        //     <CardContent className="p-0">
+        <div className="bg-slate-800/50 border border-slate-700 shadow-2xl backdrop-blur-sm overflow-hidden">
+                <div ref={tableContainerRef}
+                     className={`h-[calc(90vh-5rem)] overflow-auto transition-all duration-300 ${isScrolled ? "shadow-inner" : ""}`}>
                     <table className="w-full">
-                        <thead>
-                        <tr className="border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-750">
-                            <th className="text-left p-4 text-slate-300 font-semibold text-sm uppercase tracking-wider">
-                                Key Name
+                        <thead
+                            className={`sticky top-0 z-10 transition-all duration-300 ${
+                                isScrolled
+                                    ? "bg-gradient-to-r from-slate-800 to-slate-750 backdrop-blur-sm shadow-md border-b-2 border-slate-600"
+                                    : "bg-gradient-to-r from-slate-800 to-slate-750"
+                            }`}
+                        >
+                        <tr className="border-b border-slate-700">
+                            <th
+                                className={`px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider transition-colors ${
+                                    isScrolled ? "text-slate-200" : "text-slate-300"
+                                }`}
+                            >
+                                Key
                             </th>
-                            <th className="text-left p-4 text-slate-300 font-semibold text-sm uppercase tracking-wider">Value</th>
-                            <th className="text-left p-4 text-slate-300 font-semibold text-sm uppercase tracking-wider">
+                            <th
+                                className={`px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider transition-colors ${
+                                    isScrolled ? "text-slate-200" : "text-slate-300"
+                                }`}
+                            >
+                                Value
+                            </th>
+                            <th
+                                className={`px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider transition-colors ${
+                                    isScrolled ? "text-slate-200" : "text-slate-300"
+                                }`}
+                            >
                                 Security
                             </th>
-                            <th className="text-left p-4 text-slate-300 font-semibold text-sm uppercase tracking-wider">Actions</th>
+                            <th
+                                className={`px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider transition-colors ${
+                                    isScrolled ? "text-slate-200" : "text-slate-300"
+                                }`}
+                            >
+                                Actions
+                            </th>
                         </tr>
                         </thead>
                         <tbody>
@@ -71,7 +118,8 @@ export function EntryTable({
                         </tbody>
                     </table>
                 </div>
-            </CardContent>
-        </Card>
+        {/*    </CardContent>*/}
+        {/*</Card>*/}
+    </div>
     )
 }

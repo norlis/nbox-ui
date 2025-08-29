@@ -101,7 +101,8 @@ export function EditableRow({
             }`}
         >
             {/* Name Column */}
-            <td className="p-4 w-1/4">
+            <td className="p-4 w-1/4"
+            >
                 {shouldEdit ? (
                     <Input
                         ref={nameInputRef}
@@ -111,7 +112,16 @@ export function EditableRow({
                         className="font-mono text-sm bg-slate-700 border-slate-600 text-yellow-400 focus:border-yellow-500"
                     />
                 ) : (
-                    <span className="text-yellow-400 font-mono text-sm break-all">{entry.key}</span>
+                    <div
+                        className="group flex items-center gap-2 cursor-pointer hover:text-slate-100 transition-colors select-none"
+                        onClick={() => copyToClipboard(`{{ ${entryId} }}`, `${entryId}`)}
+                        title="Click para copiar"
+                    >
+                        <span className="text-yellow-400 font-mono text-sm break-all">
+                            {entry.key}
+                        </span>
+                        <Copy className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"/>
+                    </div>
                 )}
             </td>
 
@@ -167,18 +177,7 @@ export function EditableRow({
                         )
                     )
                 }
-                {/*{entry.secure ? (*/}
-                {/*    <Badge className="bg-yellow-500 text-black hover:bg-yellow-600 font-medium">*/}
-                {/*        <div className="flex items-center space-x-1">*/}
-                {/*            <div className="w-2 h-2 bg-black rounded-full"></div>*/}
-                {/*            <span>secure</span>*/}
-                {/*        </div>*/}
-                {/*    </Badge>*/}
-                {/*) : (*/}
-                {/*    <Badge variant="secondary" className="bg-slate-600 text-slate-300 font-medium">*/}
-                {/*        public*/}
-                {/*    </Badge>*/}
-                {/*)}*/}
+
             </td>
 
             <td className="p-4 w-1/8">
@@ -228,7 +227,7 @@ export function EditableRow({
                             </Button>
                         </>
                     )}
-                    {copiedItem === entry.key &&
+                    {(copiedItem === entry.key || copiedItem === `${entryId}` ) &&
                         <span className="text-xs text-green-400 animate-fade-in">Copied!</span>}
                 </div>
             </td>

@@ -24,7 +24,8 @@ const schema = {
         "type": "object",
         "properties": {
             "key": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
             },
             "value": {
                 "type": "string"
@@ -36,8 +37,21 @@ const schema = {
         "required": [
             "key",
             "value",
-            // "secure"
-        ]
+        ],
+        "if": {
+            "properties": {
+                "secure": {
+                    "const": true
+                }
+            }
+        },
+        "then": {
+            "properties": {
+                "value": {
+                    "minLength": 1
+                }
+            }
+        }
     }
 }
 

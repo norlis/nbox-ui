@@ -90,7 +90,11 @@ export default function Entry() {
 
     const handleDownload = useCallback(() => {
         const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-            JSON.stringify(entries?.filter(e => !e.key.endsWith("/")), null, 4)
+            JSON.stringify(
+                entries
+                    ?.filter(e => !e.key.endsWith("/"))
+                    .map(item => ({key: `${item.path}/${item.key}`, value: item.value, secure: item.secure})),
+                null, 4)
         )}`;
         const link = document.createElement("a");
         link.href = jsonString;
@@ -181,7 +185,7 @@ export default function Entry() {
     return (
         <div className="flex flex-col h-full">
 
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex justify-between items-center text-sm mb-2">
                 <div className="text-slate-400">
                     <span className="font-medium">{entriesFiltered.length}</span> entries •{" "}
                     <span className="font-medium text-yellow-400">{secureCount}</span> secure •{" "}
@@ -213,7 +217,7 @@ export default function Entry() {
                 </div>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-5rem)] py-2">
+            {/*<ScrollArea className="h-[calc(90vh-5rem)] py-1">*/}
                 <EntryTable
                     entries={entriesFiltered}
                     editableCount={editableCount}
@@ -227,7 +231,7 @@ export default function Entry() {
                     changes={changes}
                     onUpdateEntry={updateEntryChange}
                 />
-            </ScrollArea>
+            {/*</ScrollArea>*/}
 
         </div>
     )
