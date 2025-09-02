@@ -1,7 +1,7 @@
 import {
     type ActionFunctionArgs,
     data,
-    Form,
+    Form, isRouteErrorResponse,
     Link,
     type LoaderFunctionArgs,
     redirect,
@@ -17,11 +17,18 @@ import {cn} from "~/lib/utils";
 import {Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger} from "~/components/ui/sheet";
 import {Repository} from "~/adapters";
 import {useLayout} from "~/context/layout-context";
+import type {Route} from "./+types/template";
+import {FunError} from "~/components/error";
 
-export function ErrorBoundary() {
-    const error = useRouteError();
-    console.error(error)
-    return <div>Internal Error</div>;
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    if (isRouteErrorResponse(error)) {
+        return (
+            <FunError message={error.data} type={"known"}/>
+        );
+    }
+    return (
+        <FunError message={error instanceof Error ? error.message : "Unknown Error"} />
+    );
 }
 
 export const action = async ({request, params}: ActionFunctionArgs) => {

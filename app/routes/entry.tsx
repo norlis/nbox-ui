@@ -5,9 +5,14 @@ import {requireAuthCookie} from "~/adapters/auth";
 import {Repository} from "~/adapters";
 import type {EnvironmentRecords} from "~/domain/event";
 import type {EntryRecords} from "~/domain/entry";
-import {data, Link, type LoaderFunctionArgs, useFetcher, useLoaderData, useRouteError} from "react-router";
+import {
+    isRouteErrorResponse,
+    Link,
+    type LoaderFunctionArgs,
+    useFetcher,
+    useLoaderData
+} from "react-router";
 import {useTree} from "~/context/tree-context";
-import {ScrollArea} from "~/components/ui/scroll-area";
 import {cn} from "~/lib/utils";
 import {EntryTable} from "~/components/entry/entry-table";
 import {ActionButtons} from "~/components/entry/action-buttons";
@@ -15,11 +20,18 @@ import {useEntry} from "~/hooks/use-entry";
 import {toast} from "sonner";
 import type {EntryActionResponse} from "~/domain/validations";
 import {useRetrieveSecret} from "~/hooks/use-retrieve-secret";
+import type {Route} from "./+types/entry";
+import {FunError} from "~/components/error";
 
-export function ErrorBoundary() {
-    const error = useRouteError();
-    console.error(error)
-    return <div>Internal Error</div>;
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    if (isRouteErrorResponse(error)) {
+        return (
+                <FunError message={error.data} type={"known"}/>
+        );
+    }
+    return (
+        <FunError message={error instanceof Error ? error.message : "Unknown Error"} />
+    );
 }
 
 type Exchange = {
@@ -39,12 +51,12 @@ export async function loader({request}: LoaderFunctionArgs) {
     const prefix = getPrefix(request)
     const [entries = [], prefixes] = await Repository.entry.retrieve(request, prefix)
     const environments =   await Repository.entry.retrieveEnvironments(request)
-    return data<Exchange>({
+    return {
         prefixes: prefixes,
         prefix,
         entries,
         initialsPrefixes: environments,
-    });
+    };
 }
 
 export default function Entry() {

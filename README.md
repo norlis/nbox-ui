@@ -70,12 +70,37 @@ If you're familiar with deploying Node applications, the built-in app server is 
 
 Make sure to deploy the output of `npm run build`
 
+`tree -I node_modules -L 2`
+
 ```
+├── app
+│   ├── adapters
+│   ├── app.css
+│   ├── components
+│   ├── configuration
+│   ├── context
+│   ├── domain
+│   ├── hooks
+│   ├── lib
+│   ├── root.tsx
+│   ├── routes
+│   ├── routes.ts
+│   └── services
+├── build
+│   ├── client
+│   └── server
+├── components.json
+├── Dockerfile
+├── package-lock.json
 ├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+├── public
+│   ├── box.svg
+│   ├── favicon.png
+│   └── old-favicon.ico
+├── react-router.config.ts
+├── README.md
+├── tsconfig.json
+└── vite.config.ts
 ```
 
 ## Styling

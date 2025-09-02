@@ -1,12 +1,11 @@
 import {
-    data,
+    data, isRouteErrorResponse,
     Link,
     type LoaderFunctionArgs,
     Outlet,
     useLoaderData,
     useLocation,
-    useParams,
-    useRouteError
+    useParams
 } from "react-router";
 import {type Box} from "~/domain/box";
 import {Accordion, AccordionItem, AccordionTrigger} from "~/components/ui/accordion";
@@ -20,12 +19,20 @@ import {useLayout} from "~/context/layout-context";
 import {TemplateFilter} from "~/components/template/template-filter";
 import {Badge} from "~/components/ui/badge";
 import {Button} from "~/components/ui/button";
+import type {Route} from "./+types/template";
+import {FunError} from "~/components/error";
 
-export function ErrorBoundary() {
-    const error = useRouteError();
-    console.error(error)
-    return <div>Internal Error</div>;
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    if (isRouteErrorResponse(error)) {
+        return (
+            <FunError message={error.data} type={"known"}/>
+        );
+    }
+    return (
+        <FunError message={error instanceof Error ? error.message : "Unknown Error"} />
+    );
 }
+
 
 export async function loader({request}: LoaderFunctionArgs) {
     await requireAuthCookie(request)

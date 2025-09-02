@@ -1,5 +1,6 @@
 import {BASE_URL} from "~/configuration/settings";
 import {getAuthFromRequest} from "~/adapters/auth";
+import {ApiError, type ProblemDetail} from "~/adapters/api";
 
 
 export const Retrieve = async (request: Request, endpoint: string, content: string = "json") => {
@@ -10,6 +11,11 @@ export const Retrieve = async (request: Request, endpoint: string, content: stri
             headers: {...basicAuth(token)}
         }
     );
+
+    if (!res.ok) {
+        const errorData: ProblemDetail = await res.json();
+        throw new ApiError(errorData);
+    }
 
     if (content?.includes("json")) {
         return await res.json()
@@ -29,6 +35,11 @@ export const Post = async (request: Request, endpoint: string, data: object) => 
             headers: {...basicAuth(token)}
         }
     );
+
+    if (!res.ok) {
+        const errorData: ProblemDetail = await res.json();
+        throw new ApiError(errorData);
+    }
 
     return [await res.json(), res.status]
 }

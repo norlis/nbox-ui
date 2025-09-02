@@ -2,6 +2,7 @@ import type {Errors, IEntryRepository, Success} from "~/domain/operations";
 import type {EntryRecords} from "~/domain/entry";
 import type {EnvironmentRecords} from "~/domain/event";
 import {Post, Retrieve} from "~/services/rest";
+import {withApiErrorHandler} from "~/adapters/error-handler";
 
 
 export function EntryRepository(): IEntryRepository {
@@ -57,9 +58,9 @@ export function EntryRepository(): IEntryRepository {
     }
 
     return {
-        retrieve,
-        upsert,
-        retrieveSecret,
-        retrieveEnvironments,
+        retrieve: withApiErrorHandler(retrieve),
+        upsert: withApiErrorHandler(upsert),
+        retrieveSecret: withApiErrorHandler(retrieveSecret),
+        retrieveEnvironments: withApiErrorHandler(retrieveEnvironments),
     }
 }
