@@ -7,7 +7,9 @@ export default [
     route("status", "routes/status.tsx"),
     route("entry", "routes/entry.tsx"),
     route("api/entry", "routes/api.entry.ts"),
+    route("api/entry-export", "routes/api.entry-export.ts"),
     route("api/get-secret", "routes/api.get-secret.ts"),
+    route("api/boxspec-schema", "routes/api.boxspec-schema.ts"),
 
     route("template", "routes/template/index.tsx", [
         route(":service/:stage/:template", "routes/template/template.tsx") ,

@@ -1,5 +1,5 @@
-import {type EntryActionResponse, EntryArraySchema} from "~/domain/validations";
-import {Repository} from "~/adapters";
+import {type EntryActionResponse, EntryArraySchema} from "~/entry/entry.validations";
+import {Repository} from "~/core/repository";
 import {type ActionFunctionArgs, data} from "react-router";
 
 

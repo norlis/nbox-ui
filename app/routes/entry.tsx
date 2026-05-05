@@ -1,10 +1,9 @@
 import {useCallback, useEffect} from "react";
-import {useLayout} from "~/context/layout-context";
-import {EntrySidebar} from "~/components/entry/sidebar";
-import {requireAuthCookie} from "~/adapters/auth";
-import {Repository} from "~/adapters";
-import type {EnvironmentRecords} from "~/domain/event";
-import type {EntryRecords} from "~/domain/entry";
+import {useLayout} from "~/layout/layout.context";
+import {EntrySidebar} from "~/entry/components/sidebar";
+import {requireAuthCookie} from "~/core/auth";
+import {Repository} from "~/core/repository";
+import type {ClassifiedPrefixes, EntryRecords} from "~/entry/entry.types";
 import {
     isRouteErrorResponse,
     Link,
@@ -12,16 +11,16 @@ import {
     useFetcher,
     useLoaderData
 } from "react-router";
-import {useTree} from "~/context/tree-context";
-import {cn} from "~/lib/utils";
-import {EntryTable} from "~/components/entry/entry-table";
-import {ActionButtons} from "~/components/entry/action-buttons";
-import {useEntry} from "~/hooks/use-entry";
+import {useTree} from "~/tree/tree.context";
+import {cn} from "~/core/utils";
+import {EntryTable} from "~/entry/components/entry-table";
+import {ActionButtons} from "~/entry/components/action-buttons";
+import {useEntry} from "~/entry/use-entry";
 import {toast} from "sonner";
-import type {EntryActionResponse} from "~/domain/validations";
-import {useRetrieveSecret} from "~/hooks/use-retrieve-secret";
+import type {EntryActionResponse} from "~/entry/entry.validations";
+import {useRetrieveSecret} from "~/entry/use-retrieve-secret";
 import type {Route} from "./+types/entry";
-import {FunError} from "~/components/error";
+import {FunError} from "~/components/ui/error";
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     if (isRouteErrorResponse(error)) {
@@ -35,8 +34,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 type Exchange = {
-    prefixes: EnvironmentRecords
-    initialsPrefixes: EnvironmentRecords
+    prefixes: string[]
+    initialsPrefixes: ClassifiedPrefixes
     prefix: string | null
     entries: EntryRecords
 }
@@ -62,11 +61,10 @@ export async function loader({request}: LoaderFunctionArgs) {
 export default function Entry() {
     const {prefixes = [], prefix = "", entries: initialEntries = [] , initialsPrefixes} = useLoaderData<typeof loader>();
     const { addPaths, tree } = useTree();
-    const { setSidebar, setHeaderActions, setCurrentPath , currentPath} = useLayout();
+    const { setSidebar, setHeaderActions, setNavExtra, setCurrentPath, currentPath} = useLayout();
 
     const fetcher = useFetcher<EntryActionResponse>();
-    const { invalidateSecret, invalidateAll } = useRetrieveSecret();
-    // const revalidator = useRevalidator();
+    const { invalidateSecret } = useRetrieveSecret();
 
     const {
         entries,
@@ -86,63 +84,73 @@ export default function Entry() {
         updateEntryChange,
     } = useEntry({initialEntries, fetcher})
 
+    const renderNode = useCallback((node: {name: string}, fullPath: string, isActive: boolean) => (
+        <Link
+            to={`?prefix=${fullPath}/`}
+            className={cn(
+                "block w-full cursor-pointer hover:text-yellow-300",
+                isActive ? "text-yellow-300" : ""
+            )}
+        >
+            {node.name}
+        </Link>
+    ), [])
+
     const entriesFiltered = entries.filter((e) => !e.key.endsWith("/"))
     const secureCount = entriesFiltered.filter((e) => e.secure).length
     const editableCount = editingEntries.size
     const changesCount = changes.size
 
     useEffect(() => {
-        if (initialsPrefixes) {
-            addPaths(...initialsPrefixes);
+        if (initialsPrefixes?.sidebar?.length) {
+            addPaths(...initialsPrefixes.sidebar);
         }
-        if (prefix && prefixes) {
+        if (prefix && prefixes?.length) {
             addPaths(...prefixes);
         }
     }, [prefix, prefixes, initialsPrefixes, addPaths]);
 
-    const handleDownload = useCallback(() => {
-        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-            JSON.stringify(
-                entries
-                    ?.filter(e => !e.key.endsWith("/"))
-                    .map(item => ({key: `${item.path}/${item.key}`, value: item.value, secure: item.secure})),
-                null, 4)
-        )}`;
-        const link = document.createElement("a");
-        link.href = jsonString;
-        link.download = `entries-${prefix?.split("/").slice(0, -1).join("-")}.json`;
-        link.click();
-    }, [entries, prefix]);
+    useEffect(() => {
+        if (initialsPrefixes?.topbar?.length) {
+            setNavExtra(
+                <div className="flex items-center gap-2">
+                    {initialsPrefixes.topbar.map(p => (
+                        <Link
+                            key={p}
+                            to={`/entry?prefix=${p}/`}
+                            className="px-3 py-1 text-sm font-mono rounded-md bg-slate-800 text-slate-300 border border-slate-700 hover:border-yellow-500 hover:text-yellow-400 transition-colors"
+                        >
+                            {p}
+                        </Link>
+                    ))}
+                </div>
+            );
+        }
+        return () => setNavExtra(null);
+    }, [initialsPrefixes, setNavExtra]);
 
     useEffect(() => {
         const sidebarComponent = (
             <EntrySidebar
                 paths={tree}
-                searchTerm={""}
-                onSearchChange={() => {}}
-                renderNode={(node, fullPath, isActive) => (
-                    <Link
-                        to={`?prefix=${fullPath}/`}
-                        className={cn(
-                            "block w-full cursor-pointer hover:text-yellow-300",
-                            isActive ? "text-yellow-300" : ""
-                        )}
-                    >
-                        {node.name}
-                    </Link>
-                )}
+                renderNode={renderNode}
             />
         );
+
+        const allEnvironments = [
+            ...(initialsPrefixes?.sidebar ?? []),
+            ...(initialsPrefixes?.topbar ?? []),
+        ]
 
         const headerActions = (
             <ActionButtons
                 editableCount={editableCount}
                 changesCount={changesCount}
                 currentPath={currentPath || ""}
+                environments={allEnvironments}
                 onEditAll={startGlobalEdit}
                 onSaveAll={saveAllChanges}
                 onCancelAll={cancelAllEdits}
-                onDownload={handleDownload}
             />)
 
         setSidebar({content: sidebarComponent});
@@ -155,7 +163,7 @@ export default function Entry() {
             setCurrentPath("");
         };
     }, [
-        tree, prefix, setSidebar,
+        tree, prefix, setSidebar, renderNode,
         setCurrentPath, setHeaderActions, currentPath,
         startGlobalEdit, saveAllChanges,
         cancelAllEdits, changesCount, editableCount
@@ -169,26 +177,14 @@ export default function Entry() {
             switch (status) {
                 case 'success':
                     toast.success(message || "Operation successful!");
-                    if (fetcher.data.savedIds) {
-                        fetcher.data.savedIds.forEach(id => invalidateSecret(id));
-                    }
-                    // invalidateAll()
-                    // revalidator.revalidate();
-                    // console.log("success", fetcher.data, cache.has('global/example/dd'), revealedSecrets.has('global/example/dd'))
-                    // fetcher.data?.savedIds?.forEach(id => console.log("success", id, cache.has(id), revealedSecrets.has(id)));
+                    fetcher.data.savedIds?.forEach(id => invalidateSecret(id));
                     break;
                 case 'partial_error':
                     toast.warning(message || "Some entries could not be saved.");
-                    // revalidator.revalidate()
-                    // invalidateAll()
-
-                    if (fetcher.data.savedIds) {
-                        fetcher.data.savedIds.forEach(id => invalidateSecret(id));
-                    }
+                    fetcher.data.savedIds?.forEach(id => invalidateSecret(id));
                     break;
                 case 'validation_error':
                     toast.error(message || "Validation failed. Please check your data.");
-                    // revalidator.revalidate()
                     break;
             }
         }
@@ -205,7 +201,7 @@ export default function Entry() {
                     { editingEntries.size > 0 && (
                         <>
                             {" • "}
-                            <span className="font-medium text-green-400">{editableCount}</span> editable
+                            <span className="font-medium text-yellow-400">{editableCount}</span> editable
                         </>
                     )}
                 </div>
@@ -214,10 +210,10 @@ export default function Entry() {
                         <div
                             className={cn(
                                 "animate-pulse flex items-center space-x-2",
-                                changesCount > 0 ? "text-amber-700 font-semibold" : "text-blue-400"
+                                changesCount > 0 ? "text-amber-400 font-semibold" : "text-slate-400"
                             )} >
                             <div className="w-2 h-2 bg-amber-400 rounded-full animate-ping"></div>
-                            <span> Editing mode active <strong>({changesCount})</strong> </span>
+                            <span>Editing mode active <strong>({changesCount})</strong></span>
                         </div>
                     )}
                     {isLoading && (
@@ -229,21 +225,18 @@ export default function Entry() {
                 </div>
             </div>
 
-            {/*<ScrollArea className="h-[calc(90vh-5rem)] py-1">*/}
-                <EntryTable
-                    entries={entriesFiltered}
-                    editableCount={editableCount}
-                    revealedSecrets={revealedSecrets}
-                    editingEntries={editingEntries}
-                    // currentPath={currentPath || ""}
-                    onToggleVisibility={toggleSecretVisibility}
-                    onEditEntry={startEditingEntry}
-                    onSaveEntry={saveEntry}
-                    onCancelEdit={cancelEdit}
-                    changes={changes}
-                    onUpdateEntry={updateEntryChange}
-                />
-            {/*</ScrollArea>*/}
+            <EntryTable
+                entries={entriesFiltered}
+                editableCount={editableCount}
+                revealedSecrets={revealedSecrets}
+                editingEntries={editingEntries}
+                onToggleVisibility={toggleSecretVisibility}
+                onEditEntry={startEditingEntry}
+                onSaveEntry={saveEntry}
+                onCancelEdit={cancelEdit}
+                changes={changes}
+                onUpdateEntry={updateEntryChange}
+            />
 
         </div>
     )

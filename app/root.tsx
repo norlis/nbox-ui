@@ -13,12 +13,12 @@ import {
 import type {Route} from "./+types/root";
 import "./app.css";
 import type {ReactNode} from "react";
-import {Toaster} from "~/components/ui/sonner";
-import {LayoutProvider} from "~/context/layout-context";
-import {TreeProvider} from "~/context/tree-context";
-import {MainLayout} from "~/components/layout/main-layout";
-import {decodeToken, getAuthFromRequest} from "~/adapters/auth";
-import {GlobalLoading} from "~/components/global-loading";
+import {Toaster} from "./components/ui/sonner";
+import {LayoutProvider} from "~/layout/layout.context";
+import {TreeProvider} from "~/tree/tree.context";
+import {MainLayout} from "~/layout/main-layout";
+import {decodeToken, getAuthFromRequest} from "~/core/auth";
+import {GlobalLoading} from "./components/ui/global-loading";
 
 
 export async function loader({ request }: LoaderFunctionArgs) {

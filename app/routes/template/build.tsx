@@ -1,5 +1,5 @@
 import {type LoaderFunctionArgs} from "react-router";
-import {Repository} from "~/adapters";
+import {Repository} from "~/core/repository";
 
 export async function loader({request, params}: LoaderFunctionArgs) {
     const {service, stage, template} = params

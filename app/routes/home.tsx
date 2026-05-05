@@ -1,8 +1,8 @@
 import type {Route} from "./+types/home";
 import {useEffect} from "react";
-import {useLayout} from "~/context/layout-context";
+import {useLayout} from "~/layout/layout.context";
 import type {LoaderFunctionArgs} from "react-router";
-import {requireAuthCookie} from "~/adapters/auth";
+import {requireAuthCookie} from "~/core/auth";
 
 export function meta({}: Route.MetaArgs) {
     return [

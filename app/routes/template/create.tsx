@@ -4,15 +4,15 @@ import {
     Form,
     type LoaderFunctionArgs,
     redirect,
+    useActionData,
     useLoaderData,
     useRouteError,
 } from "react-router";
 
-import {type EnvironmentRecords} from "~/domain/event";
+import type {BoxSpec} from "~/template/template.types";
 import {Button} from "~/components/ui/button";
 import {Save} from "lucide-react";
-import {Editor, type OnMount} from "@monaco-editor/react";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {Input} from "~/components/ui/input";
 import {
     Select,
@@ -23,8 +23,10 @@ import {
     SelectTrigger,
     SelectValue
 } from "~/components/ui/select";
-import {Repository} from "~/adapters";
-import {useLayout} from "~/context/layout-context";
+import {Repository} from "~/core/repository";
+import {useLayout} from "~/layout/layout.context";
+import {toast} from "sonner";
+import {TemplateEditor} from "~/template/components/template-editor";
 
 
 export function ErrorBoundary() {
@@ -43,51 +45,53 @@ export const action = async ({request}: ActionFunctionArgs) => {
     if (typeof template !== "string") throw new Error('template is empty')
     if (typeof stage !== "string") throw new Error('stage is empty')
     if (typeof service !== "string") throw new Error('service is empty')
+    if (typeof templateName !== "string" || !templateName) throw new Error('templateName is empty')
 
-    const [res, err] = await Repository.template.upsert(
-        {
-            template,
-            stage,
-            service,
-            templateName: typeof templateName !== "string" ? "task_definition.json" : templateName
-        },
+    const response = await Repository.template.upsert(
+        {template, stage, service, templateName},
         request
     )
 
-    if (err !== null) {
-        throw err
+    const [path, result] = Object.entries(response ?? {})[0] ?? []
+    if (!path || !result) return redirect(`/template`)
+
+    if (!result.valid) {
+        return data({ errors: result.errors ?? [], kind: result.kind })
     }
 
-    if (res.length === 0) return redirect(`/template`)
-
-    const [servideSaved, stageSaved, templateSaved] = res[0].split("/")
-    return redirect(`/template/${servideSaved}/${stageSaved}/${templateSaved}`, {})
+    const [serviceSaved, stageSaved, templateSaved] = path.split("/")
+    return redirect(`/template/${serviceSaved}/${stageSaved}/${templateSaved}`, {})
 }
 
 
 export async function loader({request, params}: LoaderFunctionArgs) {
-    const environments: EnvironmentRecords = await Repository.template.environments(request)
+    const [stages, specs, allowedExtensions] = await Promise.all([
+        Repository.template.stages(request),
+        Repository.template.specs(request).catch(() => [] as BoxSpec[]),
+        Repository.template.allowedExtensions(request).catch(() => [] as string[]),
+    ])
     const {service = ""} = params
 
-    return data({
-        service,
-        environments
-    })
+    return data({service, stages, specs, allowedExtensions})
 }
 
 export default function NewTemplate() {
-    const {environments = [], service} = useLoaderData<typeof loader>();
+    const {stages = [], specs = [], allowedExtensions = [], service} = useLoaderData<typeof loader>();
+    const actionData = useActionData<typeof action>();
 
     const [template, setTemplate] = useState<string>("")
-    const [isClient, setIsClient] = useState(false);
+    const [templateName, setTemplateName] = useState<string>("")
+    const [selectedSpec, setSelectedSpec] = useState<string>("")
 
-
-    const editorRef = useRef<any>(null)
     const {setHeaderActions, setCurrentPath} = useLayout();
 
     useEffect(() => {
-        setIsClient(typeof window !== 'undefined');
-    }, []);
+        if (actionData?.errors?.length) {
+            actionData.errors.forEach((e: { path: string; message: string }) => {
+                toast.error(`${e.path}: ${e.message}`)
+            })
+        }
+    }, [actionData]);
 
     useEffect(() => {
         return () => {
@@ -96,79 +100,81 @@ export default function NewTemplate() {
         };
     }, [service, setHeaderActions, setCurrentPath])
 
-    const handleEditorDidMount: OnMount = (editor) => {
-        editorRef.current = editor
-    }
-
-    const handleEditorChange = (value: string | undefined) => {
-        const newValue = value || ''
-        setTemplate(newValue)
+    const handleSpecChange = (specId: string) => {
+        setSelectedSpec(specId)
+        if (specId === '__custom__') {
+            setTemplateName('')
+            return
+        }
+        const spec = specs.find(s => s.id === specId)
+        if (spec?.matchPatterns?.[0]) {
+            // Use first pattern as suggestion, strip glob wildcards
+            const suggested = spec.matchPatterns[0].replace(/\*/g, '')
+            setTemplateName(suggested)
+        }
     }
 
     return (
-        <>
             <Form method="post">
-                <input type="hidden" name="template" defaultValue={template}/>
-                <div
-                    className="flex justify-between items-center w-full space-x-2 p-3 shadow-lg mb-4">
+                <input type="hidden" name="template" value={template}/>
+                <input type="hidden" name="templateName" value={templateName}/>
+                <div className="flex justify-between items-center w-full space-x-2 p-3 shadow-lg mb-4">
 
-                    <div className="flex flex-row">
-                        <input type="hidden" defaultValue={template} name="template"/>
-
+                    <div className="flex flex-1 flex-row items-center gap-4">
                         <Input type="text" name="service" placeholder="service name"
                                defaultValue={service}
-                               className="mr-6 bg-gray-700/50 border focus:border-gray-600 border-gray-500 rounded-md"/>
+                               className="flex-1 min-w-0 bg-gray-700/50 border focus:border-gray-600 border-gray-500 rounded-md"/>
 
                         <Select name="stage">
-                            <SelectTrigger className="w-64 mr-6 bg-slate-900">
-                                <SelectValue placeholder="Select a environments"/>
+                            <SelectTrigger className="flex-1 min-w-0 bg-slate-900">
+                                <SelectValue placeholder="Select stage"/>
                             </SelectTrigger>
-                            <SelectContent className="w-64 bg-gray-700/60 border-gray-700 rounded-md text-white">
+                            <SelectContent className="bg-gray-700/60 border-gray-700 rounded-md text-white">
                                 <SelectGroup className="bg-gray-700/60">
-                                    <SelectLabel>Environments</SelectLabel>
-                                    {environments.map(env =>
-                                        <SelectItem key={env} value={env}>{env}</SelectItem>
+                                    <SelectLabel>Stages</SelectLabel>
+                                    {stages.map(stage =>
+                                        <SelectItem key={stage} value={stage}>{stage}</SelectItem>
                                     )}
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
 
-                        <Input type="text" name="templateName" placeholder="template name"
-                               defaultValue="task_definition.json"
-                               readOnly={true}
-                               className="bg-gray-700/50 border focus:border-gray-600 border-gray-500 rounded-md"/>
+                        <Select value={selectedSpec} onValueChange={handleSpecChange}>
+                            <SelectTrigger className="flex-1 min-w-0 bg-slate-900">
+                                <SelectValue placeholder="Select spec type"/>
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-700/60 border-gray-700 rounded-md text-white">
+                                <SelectGroup className="bg-gray-700/60">
+                                    <SelectLabel>Spec Types</SelectLabel>
+                                    {specs.map(spec =>
+                                        <SelectItem key={spec.id} value={spec.id}>
+                                            {spec.name}
+                                        </SelectItem>
+                                    )}
+                                    <SelectItem value="__custom__">Custom file</SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
+                        <Input type="text"
+                               placeholder="filename (e.g. task-definition.json)"
+                               value={templateName}
+                               onChange={(e) => setTemplateName(e.target.value)}
+                               className="flex-1 min-w-0 bg-gray-700/50 border focus:border-gray-600 border-gray-500 rounded-md"/>
                     </div>
 
                     <Button type="submit"
-                            className=" border ml-6 border-gray-600 rounded-md  mt-3 hover:bg-gray-600 hover:text-orange-400">
+                            className="border ml-6 border-gray-600 rounded-md hover:bg-gray-600 hover:text-orange-400">
                         <Save className="mr-2 h-4 w-4"/> Save
                     </Button>
                 </div>
 
-
-                {isClient && (
-                        <div className="border border-gray-900 bg-neutral-900 h-[70vh] w-full flex flex-col">
-                            <div className="flex-grow border rounded-md overflow-hidden border-gray-700">
-                                <Editor
-                                    height="100%"
-                                    width="100%"
-                                    language="json"
-                                    theme={"vs-dark"}
-                                    onChange={handleEditorChange}
-                                    onMount={handleEditorDidMount}
-                                    options={{
-                                        minimap: {enabled: false},
-                                        fontSize: 14,
-                                        wordWrap: 'on',
-                                        scrollBeyondLastLine: false,
-                                        automaticLayout: true,
-                                        cursorStyle: 'block'
-                                    }}
-                                /></div>
-                        </div>
-                )}
+                <TemplateEditor
+                    value={template}
+                    filename={templateName}
+                    onChange={setTemplate}
+                />
 
             </Form>
-        </>
     )
 }

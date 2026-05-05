@@ -1,5 +1,5 @@
-import {Repository} from "~/adapters";
-import {requireAuthCookie} from "~/adapters/auth";
+import {Repository} from "~/core/repository";
+import {requireAuthCookie} from "~/core/auth";
 import {data, type LoaderFunctionArgs} from "react-router";
 
 export async function loader({ request }: LoaderFunctionArgs) {

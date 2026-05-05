@@ -147,3 +147,11 @@ npm install
 ```shell
 npx shadcn@latest add [name]
 ```
+
+
+## news
+
+```shell
+mise use -g bun@latest  # install latest bun
+
+```
