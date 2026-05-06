@@ -17,11 +17,18 @@ interface LayoutContextType {
     setNavExtra: (node: ReactNode | null) => void;
     setCurrentPath: (path: string | null) => void;
     toggleSidebar: () => void;
+    setSidebarCollapsed: (value: boolean) => void;
+    restoreSidebarPreference: () => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'nbox:sidebar-collapsed';
+
+function readSidebarPreference(): boolean {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(STORAGE_KEY) === '1';
+}
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
     const [sidebar, setSidebar] = useState<SidebarConfig | null>(null);
@@ -32,10 +39,7 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
 
     // Hydrate preference from localStorage after mount (SSR-safe).
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        if (window.localStorage.getItem(STORAGE_KEY) === '1') {
-            setIsSidebarCollapsed(true);
-        }
+        if (readSidebarPreference()) setIsSidebarCollapsed(true);
     }, []);
 
     const toggleSidebar = useCallback(() => {
@@ -46,6 +50,15 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
             }
             return next;
         });
+    }, []);
+
+    // Route-driven override (does not persist). Pair with restoreSidebarPreference on unmount.
+    const setSidebarCollapsed = useCallback((value: boolean) => {
+        setIsSidebarCollapsed(value);
+    }, []);
+
+    const restoreSidebarPreference = useCallback(() => {
+        setIsSidebarCollapsed(readSidebarPreference());
     }, []);
 
     const value = useMemo(() => ({
@@ -59,7 +72,9 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
         setNavExtra,
         setCurrentPath,
         toggleSidebar,
-    }), [sidebar, headerActions, navExtra, currentPath, isSidebarCollapsed, toggleSidebar]);
+        setSidebarCollapsed,
+        restoreSidebarPreference,
+    }), [sidebar, headerActions, navExtra, currentPath, isSidebarCollapsed, toggleSidebar, setSidebarCollapsed, restoreSidebarPreference]);
 
     return (
         <LayoutContext.Provider value={value}>

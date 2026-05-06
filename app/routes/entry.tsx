@@ -48,15 +48,17 @@ function getPrefix(request: Request) {
 export async function loader({request}: LoaderFunctionArgs) {
     await requireAuthCookie(request)
     const prefix = getPrefix(request)
-    const [[entries = [], prefixes], environments] = await Promise.all([
+    const [[entries = [], prefixes], environments, stages] = await Promise.all([
         Repository.entry.retrieve(request, prefix),
         Repository.entry.retrieveEnvironments(request),
+        Repository.template.stages(request),
     ])
     return {
         prefixes: prefixes,
         prefix,
         entries,
         initialsPrefixes: environments,
+        stages,
     };
 }
 
@@ -69,7 +71,7 @@ export default function Entry() {
 }
 
 function EntryView() {
-    const {prefixes = [], prefix = "", entries: initialEntries = [] , initialsPrefixes} = useLoaderData<typeof loader>();
+    const {prefixes = [], prefix = "", entries: initialEntries = [] , initialsPrefixes, stages = []} = useLoaderData<typeof loader>();
     const { addPaths, tree } = useTree();
     const { setSidebar, setHeaderActions, setNavExtra, setCurrentPath, currentPath} = useLayout();
 
@@ -143,6 +145,7 @@ function EntryView() {
         const sidebarComponent = (
             <EntrySidebar
                 paths={tree}
+                stages={stages}
                 renderNode={renderNode}
             />
         );
@@ -173,7 +176,7 @@ function EntryView() {
             setCurrentPath("");
         };
     }, [
-        tree, prefix, setSidebar, renderNode,
+        tree, stages, prefix, setSidebar, renderNode,
         setCurrentPath, setHeaderActions, currentPath,
         startGlobalEdit, saveAllChanges,
         cancelAllEdits, changesCount, editableCount

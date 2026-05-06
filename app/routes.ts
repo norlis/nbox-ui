@@ -8,6 +8,7 @@ export default [
     route("entry", "routes/entry.tsx"),
     route("api/entry", "routes/api.entry.ts"),
     route("api/entry-export", "routes/api.entry-export.ts"),
+    route("api/entry-prefix", "routes/api.entry-prefix.ts"),
     route("api/get-secret", "routes/api.get-secret.ts"),
     route("api/boxspec-schema", "routes/api.boxspec-schema.ts"),
 

@@ -83,12 +83,19 @@ export async function loader({request}: LoaderFunctionArgs) {
 export default function TemplateDiff() {
     const {boxes, a, b, sideA, sideB} = useLoaderData<typeof loader>()
     const navigate = useNavigate()
-    const {setCurrentPath} = useLayout()
+    const {setCurrentPath, setSidebarCollapsed, restoreSidebarPreference} = useLayout()
 
     useEffect(() => {
         setCurrentPath("template / diff")
         return () => setCurrentPath("")
     }, [setCurrentPath])
+
+    // Diff needs horizontal real estate; collapse the sidebar while this view is mounted.
+    // The user can still expand it manually via the toggle; on leave we restore their preference.
+    useEffect(() => {
+        setSidebarCollapsed(true)
+        return () => restoreSidebarPreference()
+    }, [setSidebarCollapsed, restoreSidebarPreference])
 
     function update(side: 'a' | 'b', value: {service: string, stage: string}) {
         const next = {a, b}
