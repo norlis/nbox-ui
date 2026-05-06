@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react"
-import {Button} from "../../components/ui/button"
-import {Label} from "../../components/ui/label"
+import {Button} from "~/components/ui/button"
+import {Label} from "~/components/ui/label"
 import {Editor, type OnMount} from "@monaco-editor/react"
 import {useFetcher} from "react-router"
 import type {EntryActionResponse} from "~/entry/entry.validations"
@@ -44,7 +44,7 @@ API_KEY=abc123             # secure
 SECRET_TOKEN=supersecret
 FEATURE_FLAG=true`
 
-export function ImportEnvForm({onClose, currentPath}: ImportEnvFormProps) {
+export function ImportEnvForm({onClose, currentPath}: Readonly<ImportEnvFormProps>) {
     const fetcher = useFetcher<EntryActionResponse>()
     const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
     const [code, setCode] = useState(EXAMPLE)

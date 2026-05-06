@@ -9,7 +9,7 @@ export type BuildNode = {
 }
 
 export class TreeBuilder {
-    private root: Map<string, BuildNode>;
+    private readonly root: Map<string, BuildNode>;
 
     constructor(...initialPaths: string[]) {
         this.root = new Map<string, BuildNode>();

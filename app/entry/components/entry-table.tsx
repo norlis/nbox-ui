@@ -28,7 +28,7 @@ export function EntryTable({
                                onSaveEntry,
                                onCancelEdit,
                                onUpdateEntry,
-                           }: TableProps) {
+                           }: Readonly<TableProps>) {
     const [isScrolled, setIsScrolled] = useState(false)
     const tableContainerRef = useRef<HTMLDivElement>(null)
 

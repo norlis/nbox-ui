@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react"
-import {Button} from "../../components/ui/button"
-import {Label} from "../../components/ui/label"
+import {Button} from "~/components/ui/button"
+import {Label} from "~/components/ui/label"
 import {FileJson} from "lucide-react"
 import {Editor, type OnMount} from "@monaco-editor/react";
 import Ajv from 'ajv'

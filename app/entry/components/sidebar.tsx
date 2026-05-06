@@ -1,5 +1,5 @@
-import {Button} from "../../components/ui/button"
-import {Input} from "../../components/ui/input"
+import {Button} from "~/components/ui/button"
+import {Input} from "~/components/ui/input"
 import {memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react"
 import {ChevronDown, ChevronRight, FileText, RefreshCw, Search} from "lucide-react"
 import {cn} from "~/core/utils"

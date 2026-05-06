@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react"
-import {Input} from "../../components/ui/input"
-import {Label} from "../../components/ui/label"
-import {Switch} from "../../components/ui/switch"
-import {Button} from "../../components/ui/button"
+import {Input} from "~/components/ui/input"
+import {Label} from "~/components/ui/label"
+import {Switch} from "~/components/ui/switch"
+import {Button} from "~/components/ui/button"
 import {useFetcher} from "react-router";
 import {type EntryActionResponse, EntryArraySchema} from "~/entry/entry.validations";
 import {useEntryForm} from "~/entry/use-entry-form";

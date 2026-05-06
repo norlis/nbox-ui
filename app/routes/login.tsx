@@ -4,7 +4,7 @@ import {Input} from "../components/ui/input";
 import {Label} from "../components/ui/label";
 import {BASE_URL} from "~/config/settings";
 import {data, Form, type LoaderFunctionArgs, redirect, useActionData} from "react-router";
-import type {Route} from "../../.react-router/types/app/routes/+types/home";
+import type {Route} from "~/.react-router/types/app/routes/+types/home";
 
 
 async function login(username: string, password: string) {

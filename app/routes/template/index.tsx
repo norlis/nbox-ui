@@ -8,7 +8,7 @@ import {
     useParams
 } from "react-router";
 import {type Box} from "~/template/template.types";
-import {Accordion, AccordionItem, AccordionTrigger} from "../../components/ui/accordion";
+import {Accordion, AccordionItem, AccordionTrigger} from "~/components/ui/accordion";
 import {AccordionContent} from "@radix-ui/react-accordion";
 import {useEffect, useMemo, useState} from "react";
 import {File, Folder, Plus} from "lucide-react";
@@ -17,10 +17,10 @@ import {requireAuthCookie} from "~/core/auth";
 import {Repository} from "~/core/repository";
 import {useLayout} from "~/layout/layout.context";
 import {TemplateFilter} from "~/template/components/template-filter";
-import {Badge} from "../../components/ui/badge";
-import {Button} from "../../components/ui/button";
+import {Badge} from "~/components/ui/badge";
+import {Button} from "~/components/ui/button";
 import type {Route} from "./+types/template";
-import {FunError} from "../../components/ui/error";
+import {FunError} from "~/components/ui/error";
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     if (isRouteErrorResponse(error)) {

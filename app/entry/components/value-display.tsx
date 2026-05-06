@@ -1,8 +1,8 @@
 import {useState} from "react"
 import {Eye, EyeOff, Maximize2} from "lucide-react"
-import {Button} from "../../components/ui/button"
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "../../components/ui/dialog"
-import {ScrollArea} from "../../components/ui/scroll-area";
+import {Button} from "~/components/ui/button"
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "~/components/ui/dialog"
+import {ScrollArea} from "~/components/ui/scroll-area";
 
 interface ValueDisplayProps {
     value: string

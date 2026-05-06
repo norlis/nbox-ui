@@ -1,11 +1,6 @@
 import {Download} from "lucide-react"
-import {Button} from "../../components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu"
+import {Button} from "~/components/ui/button"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "~/components/ui/dropdown-menu"
 
 interface ExportDropdownProps {
     currentPath: string
@@ -18,10 +13,9 @@ const FORMATS = [
     {label: 'ECS Task Definition', value: 'ecs'},
 ] as const
 
-export function ExportDropdown({currentPath}: ExportDropdownProps) {
+export function ExportDropdown({currentPath}: Readonly<ExportDropdownProps>) {
     const handleExport = (format: string) => {
-        const url = `/api/entry-export?prefix=${encodeURIComponent(currentPath)}&format=${format}`
-        window.location.href = url
+        window.location.href = `/api/entry-export?prefix=${encodeURIComponent(currentPath)}&format=${format}`
     }
 
     return (

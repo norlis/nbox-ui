@@ -1,10 +1,10 @@
 import type React from "react"
 import {useEffect, useRef, useState} from "react"
 import {Check, Copy, Edit, X} from 'lucide-react'
-import {Button} from "../../components/ui/button"
-import {Badge} from "../../components/ui/badge"
-import {Input} from "../../components/ui/input"
-import {Switch} from "../../components/ui/switch";
+import {Button} from "~/components/ui/button"
+import {Badge} from "~/components/ui/badge"
+import {Input} from "~/components/ui/input"
+import {Switch} from "~/components/ui/switch";
 import {ValueDisplay} from "./value-display"
 import type {EntryEditable} from "~/entry/entry.types"
 import {isRevealable} from "~/entry/entry.types"

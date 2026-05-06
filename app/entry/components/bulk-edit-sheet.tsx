@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react"
-import {Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger} from "../../components/ui/sheet"
-import {Button} from "../../components/ui/button"
+import {Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger} from "~/components/ui/sheet"
+import {Button} from "~/components/ui/button"
 import {Editor, type OnMount} from "@monaco-editor/react"
 import {useFetcher} from "react-router"
 import type {EntryActionResponse} from "~/entry/entry.validations"
