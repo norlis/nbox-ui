@@ -140,6 +140,11 @@ export function EditableRow({
                             onChange={(e) => onUpdateEntry(entryId, currentName, e.target.value, currentSecure)}
                             onKeyDown={handleKeyDown}
                             placeholder={isRevealable(entry) ? getDefaultSecureValue() : "Enter value..."}
+                            autoComplete="new-password"
+                            spellCheck={false}
+                            data-1p-ignore
+                            data-lpignore="true"
+                            data-form-type="other"
                             className="font-mono text-sm bg-slate-700 border-slate-600 text-slate-300 focus:border-yellow-500"
                         />
                     </div>

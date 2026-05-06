@@ -1,13 +1,15 @@
 import React, {useCallback, useState} from "react"
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "../../components/ui/dialog"
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "../../components/ui/tabs"
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "~/components/ui/dialog"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "~/components/ui/tabs"
 import {TraditionalForm} from "./traditional-form"
 import {ImportJsonForm} from "./import-json-form"
 import {ImportEnvForm} from "./import-env-form"
 
+type TabKey = "single" | "import" | "dotenv"
+
 interface CreateVariableModalProps {
     currentPath: string
-    defaultTab?: "single" | "import" | "dotenv"
+    defaultTab?: TabKey
     children: React.ReactNode // To allow custom trigger button
 }
 
@@ -15,9 +17,9 @@ export function CreateVariableModal({
                                         currentPath,
                                         defaultTab = "single",
                                         children,
-                                    }: CreateVariableModalProps) {
+                                    }: Readonly<CreateVariableModalProps>) {
     const [isOpen, setIsOpen] = useState(false)
-    const [activeTab, setActiveTab] = useState(defaultTab)
+    const [activeTab, setActiveTab] = useState<TabKey>(defaultTab)
 
     const handleClose = useCallback(() => {
         setIsOpen(false)
@@ -31,7 +33,7 @@ export function CreateVariableModal({
                 <DialogHeader>
                     <DialogTitle className="text-slate-50">Add / Import</DialogTitle>
                 </DialogHeader>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
                     <TabsList className="grid w-full grid-cols-3 bg-slate-800 border-slate-700">
                         <TabsTrigger
                             value="single"

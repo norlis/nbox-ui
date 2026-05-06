@@ -1,15 +1,25 @@
 import type {EnvironmentRecords} from "~/core/types";
 
+export type TemplateMetadata = {
+    hash?: string
+    updatedAt?: string
+    updatedBy?: string
+    version?: string
+}
+
 export type Box = {
     service: string
     stage: {
-        [environment: string]: {
-            template: {
-                name: string
-                value: string
-            }
-        }
+        [environment: string]: Stage
     }
+}
+
+export type Stage = {
+    template: {
+        name: string
+        value: string
+    }
+    metadata?: TemplateMetadata
 }
 
 export type PropsTemplate = {
@@ -55,6 +65,7 @@ export interface ITemplateRepository {
     stages: (request: Request) => Promise<string[]>
     vars: (props: PropsTemplate, request: Request) => Promise<string[]>
     retrieve: (props: PropsTemplate, request: Request) => Promise<string>
+    retrieveStage: (service: string, stage: string, request: Request) => Promise<Stage>
     build: (props: PropsTemplate, request: Request) => Promise<string>
     templates: (request: Request) => Promise<Box[]>
     specs: (request: Request) => Promise<BoxSpec[]>

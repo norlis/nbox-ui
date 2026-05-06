@@ -92,7 +92,8 @@ export function ImportJsonForm({onClose, currentPath}: ImportJsonFormProps) {
         editorRef.current = editor
     }
 
-    const validateUniqueKeys = (json: any[]): string | null => {
+    const validateUniqueKeys = (json: unknown): string | null => {
+        if (!Array.isArray(json)) return null
         const keys = new Set()
         for (let i = 0; i < json.length; i++) {
             if (keys.has(json[i].key)) {

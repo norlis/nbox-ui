@@ -1,13 +1,21 @@
-import type {Box, BoxSpec, ITemplateRepository, PropsTemplate, PropsTemplateChange, ResolvedSchema, TemplateUpsertResponse} from "~/template/template.types";
+import type {Box, BoxSpec, ITemplateRepository, PropsTemplate, PropsTemplateChange, ResolvedSchema, Stage, TemplateUpsertResponse} from "~/template/template.types";
 import type {PrefixConfig} from "~/core/types";
 import {ApiError, Post, Retrieve} from "~/core/http";
+import {BoxArraySchema, parseOrWarn, StageSchema} from "~/core/api-schemas";
+
+function decodeBase64(value: string): string {
+    try {
+        return atob(value)
+    } catch {
+        return value
+    }
+}
 
 export function TemplateRepository(): ITemplateRepository {
     const upsert = async (props: PropsTemplateChange, request: Request): Promise<TemplateUpsertResponse> => {
         const {template, stage, service, templateName} = props
-        const name = templateName
         try {
-            const [res] = await Post(request, `/api/box/${service}/${stage}/${name}`, {
+            const [res] = await Post(request, `/api/box/${service}/${stage}/${templateName}`, {
                 content: btoa(template)
             })
             return res
@@ -28,8 +36,23 @@ export function TemplateRepository(): ITemplateRepository {
         return await Retrieve(request, `/api/box/${props.service}/${props.stage}/${props.template}/vars`)
     }
 
-    const retrieve = async (props: PropsTemplate, request: Request): Promise<string> => {
+    const retrieve   = async (props: PropsTemplate, request: Request): Promise<string> => {
         return await Retrieve(request, `/api/box/${props.service}/${props.stage}/${props.template}`, "text")
+    }
+
+    const retrieveStage = async (service: string, stage: string, request: Request): Promise<Stage> => {
+        const raw = await Retrieve(request, `/api/box/${service}/${stage}`)
+        const parsed = parseOrWarn(StageSchema, raw, 'retrieveStage') as Stage
+        // Backend stores `template.value` base64-encoded (mirror of `btoa()` on upsert).
+        // Decode here so consumers always see plain text. Fallback keeps the raw
+        // value if the backend ever returns it decoded already.
+        return {
+            ...parsed,
+            template: {
+                ...parsed.template,
+                value: decodeBase64(parsed.template.value),
+            },
+        }
     }
 
     const build = async (props: PropsTemplate, request: Request): Promise<string> => {
@@ -37,7 +60,8 @@ export function TemplateRepository(): ITemplateRepository {
     }
 
     const templates = async (request: Request): Promise<Box[]> => {
-        return await Retrieve(request, `/api/box`)
+        const raw = await Retrieve(request, `/api/box`) ?? []
+        return parseOrWarn(BoxArraySchema, raw, 'templates') as Box[]
     }
 
     const stages = async (request: Request): Promise<string[]> => {
@@ -62,6 +86,7 @@ export function TemplateRepository(): ITemplateRepository {
         stages,
         vars,
         retrieve,
+        retrieveStage,
         build,
         templates,
         specs,

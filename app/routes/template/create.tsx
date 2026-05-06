@@ -12,7 +12,7 @@ import {
 import type {BoxSpec} from "~/template/template.types";
 import {Button} from "~/components/ui/button";
 import {Save} from "lucide-react";
-import {useEffect, useState} from "react";
+import {lazy, Suspense, useEffect, useState} from "react";
 import {Input} from "~/components/ui/input";
 import {
     Select,
@@ -26,7 +26,13 @@ import {
 import {Repository} from "~/core/repository";
 import {useLayout} from "~/layout/layout.context";
 import {toast} from "sonner";
-import {TemplateEditor} from "~/template/components/template-editor";
+const TemplateEditor = lazy(() =>
+    import("~/template/components/template-editor").then(m => ({default: m.TemplateEditor}))
+);
+
+const EditorFallback = () => (
+    <div className="border border-gray-900 bg-neutral-900 w-full h-[75vh] animate-pulse"/>
+);
 
 
 export function ErrorBoundary() {
@@ -169,11 +175,13 @@ export default function NewTemplate() {
                     </Button>
                 </div>
 
-                <TemplateEditor
-                    value={template}
-                    filename={templateName}
-                    onChange={setTemplate}
-                />
+                <Suspense fallback={<EditorFallback/>}>
+                    <TemplateEditor
+                        value={template}
+                        filename={templateName}
+                        onChange={setTemplate}
+                    />
+                </Suspense>
 
             </Form>
     )

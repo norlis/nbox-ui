@@ -28,11 +28,10 @@ export type EntryRecord = Entry & {
     path: string
 }
 
-export type EntryEditable = EntryRecord & {
-    isEditing: boolean
-}
-
-export type EntriesEditable = EntryEditable[]
+// Editing state is tracked via the `editingEntries` Set in `useEntry`, not on
+// the entry itself. These aliases stay for backwards compat with consumers.
+export type EntryEditable = EntryRecord
+export type EntriesEditable = EntryRecord[]
 
 export type Entries = Entry[]
 
@@ -50,5 +49,7 @@ export interface IEntryRepository {
     retrieve: (request: Request, prefix: string | null) => Promise<[EntryRecords, EnvironmentRecords]>
     retrieveEnvironments: (request: Request) => Promise<ClassifiedPrefixes>
     retrieveSecret: (keyPath: string, request: Request) => Promise<string>
-    upsert: (payload: object[], request: Request) => Promise<[Success, Errors]>
+    getEntry: (keyPath: string, request: Request) => Promise<Entry>
+    lookupMany: (keys: string[], request: Request) => Promise<Record<string, Entry>>
+    upsert: (payload: Entry[], request: Request) => Promise<[Success, Errors]>
 }

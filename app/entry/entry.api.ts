@@ -1,11 +1,27 @@
-import type {ClassifiedPrefixes, Errors, IEntryRepository, Success} from "~/entry/entry.types";
+import type {ClassifiedPrefixes, Entry, Errors, IEntryRepository, Success} from "~/entry/entry.types";
 import type {EntryRecords} from "~/entry/entry.types";
 import type {EnvironmentRecords, PrefixConfig} from "~/core/types";
 import {Post, Retrieve} from "~/core/http";
 import {withApiErrorHandler} from "~/core/errors";
 import {classifyPrefix} from "~/config/prefix-groups";
-import {ApiEntryArraySchema, parseOrWarn, PrefixConfigArraySchema} from "~/core/api-schemas";
+import {
+    ApiEntryArraySchema,
+    ApiEntrySchema,
+    EntryLookupResponseSchema,
+    EntryUpsertResponseSchema,
+    parseOrWarn,
+    PrefixConfigArraySchema,
+} from "~/core/api-schemas";
 
+
+function extractErrorMessage(detail: unknown): string | null {
+    if (typeof detail === 'string' && detail.length > 0) return detail
+    if (detail && typeof detail === 'object' && 'error' in detail) {
+        const err = (detail as {error: unknown}).error
+        if (typeof err === 'string' && err.length > 0) return err
+    }
+    return null
+}
 
 export function EntryRepository(): IEntryRepository {
 
@@ -47,7 +63,7 @@ export function EntryRepository(): IEntryRepository {
         return [entries, prefixes]
     }
 
-    const upsert = async (payload: object[], request: Request): Promise<[Success, Errors]> => {
+    const upsert = async (payload: Entry[], request: Request): Promise<[Success, Errors]> => {
         const success: Success = []
         const errors: Errors = {}
 
@@ -56,12 +72,30 @@ export function EntryRepository(): IEntryRepository {
             return [[], {message: res.detail || 'An unknown error occurred'}];
         }
 
+        // Legacy shape: array of {key, error}
         if (Array.isArray(res)) {
             for (const result of res) {
                 if (result.error === null) {
                     success.push(result.key);
                 } else {
                     errors[result.key] = result.error;
+                }
+            }
+            return [success, errors]
+        }
+
+        // Swagger v2.0 shape: map<key, detail>. With HTTP 200 each key was
+        // processed; per-key failures surface as { error: string } in the
+        // detail object. Anything else is treated as success.
+        if (res && typeof res === 'object') {
+            const map = parseOrWarn(EntryUpsertResponseSchema, res, 'upsert')
+            for (const entry of payload) {
+                const detail = map[entry.key]
+                const errorMsg = extractErrorMessage(detail)
+                if (errorMsg) {
+                    errors[entry.key] = errorMsg
+                } else {
+                    success.push(entry.key)
                 }
             }
         }
@@ -73,10 +107,24 @@ export function EntryRepository(): IEntryRepository {
         return res.value
     }
 
+    const getEntry = async (keyPath: string, request: Request): Promise<Entry> => {
+        const raw = await Retrieve(request, `/api/entry/key?v=${encodeURIComponent(keyPath)}`)
+        return parseOrWarn(ApiEntrySchema, raw, 'getEntry') as Entry
+    }
+
+    const lookupMany = async (keys: string[], request: Request): Promise<Record<string, Entry>> => {
+        if (keys.length === 0) return {}
+        const [res, status] = await Post(request, '/api/entry/lookup', keys)
+        if (status !== 200) return {}
+        return parseOrWarn(EntryLookupResponseSchema, res, 'lookupMany') as Record<string, Entry>
+    }
+
     return {
         retrieve: withApiErrorHandler(retrieve),
         upsert: withApiErrorHandler(upsert),
         retrieveSecret: withApiErrorHandler(retrieveSecret),
         retrieveEnvironments: withApiErrorHandler(retrieveEnvironments),
+        getEntry: withApiErrorHandler(getEntry),
+        lookupMany: withApiErrorHandler(lookupMany),
     }
 }

@@ -45,7 +45,7 @@ export const Retrieve = async (request: Request, endpoint: string, content: stri
     return await res.text()
 }
 
-export const Post = async (request: Request, endpoint: string, data: object) => {
+export const Post = async (request: Request, endpoint: string, data: unknown) => {
     const token = await getAuthFromRequest(request)
 
     const res = await fetch(`${BASE_URL}${endpoint}`, {
@@ -60,6 +60,28 @@ export const Post = async (request: Request, endpoint: string, data: object) => 
     }
 
     return [await res.json(), res.status]
+}
+
+export const Delete = async (request: Request, endpoint: string) => {
+    const token = await getAuthFromRequest(request)
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+        method: "DELETE",
+        headers: {...basicAuth(token)}
+    });
+    if (!res.ok) {
+        const errorData: ProblemDetail = await res.json();
+        throw new ApiError(errorData);
+    }
+    return [await res.json(), res.status]
+}
+
+export const Head = async (request: Request, endpoint: string): Promise<boolean> => {
+    const token = await getAuthFromRequest(request)
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+        method: "HEAD",
+        headers: {...basicAuth(token)}
+    });
+    return res.ok
 }
 
 const basicAuth = (token: string | null): Record<string, string> => ({

@@ -34,7 +34,16 @@ export const EntryArraySchema = z.array(EntrySchema).refine(
     }
 );
 
-export type FieldErrors = z.ZodFlattenedError<typeof EntryArraySchema>['fieldErrors'];
+// Derived from the actual return type of `safeParse(...).error.flatten()` so it
+// stays in sync across zod versions (zod 4 changed `fieldErrors` to a mapped
+// type over array keys, which trips literal `Record<string, string[]>` shapes).
+type EntryArraySafeParseError = Extract<
+    ReturnType<typeof EntryArraySchema.safeParse>,
+    {success: false}
+>;
+type EntryArrayFlattened = ReturnType<EntryArraySafeParseError['error']['flatten']>;
+
+export type FieldErrors = EntryArrayFlattened['fieldErrors'];
 
 export type FormattedErrors = {
     [index: number]: {
@@ -53,9 +62,6 @@ export type EntryActionResponse =
 }
     | {
     status: 'validation_error';
-    errors: {
-        formErrors: string[],
-        fieldErrors: FieldErrors
-    };
+    errors: EntryArrayFlattened;
     message?: string;
 };

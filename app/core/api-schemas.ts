@@ -2,7 +2,9 @@ import {z} from "zod"
 
 // ─── Storage Backend ─────────────────────────────────────────────────────────
 
-export const StorageBackendSchema = z.enum(['dynamodb', 'parameterstore', 'parameterstore_secure'])
+// Permissive: backend may add new variants (e.g. "vault") faster than the
+// swagger enum. The UI's `StorageBackend` type already falls back to `string`.
+export const StorageBackendSchema = z.string()
 
 // ─── Entry ───────────────────────────────────────────────────────────────────
 
@@ -22,6 +24,41 @@ export const ApiEntrySchema = z.object({
 }).passthrough()
 
 export const ApiEntryArraySchema = z.array(ApiEntrySchema)
+
+// `POST /api/entry` returns a map { "<key>": <detail> }. With HTTP 200 the
+// server processed each key; the per-key detail object may carry an `error`
+// field when an individual write failed. Schema is permissive: detail shape
+// is opaque to the UI and only the `error` field drives success/failure.
+export const EntryUpsertResponseSchema = z.record(z.string(), z.unknown())
+
+// `POST /api/entry/lookup` returns a map { "<key>": Entry }
+export const EntryLookupResponseSchema = z.record(z.string(), ApiEntrySchema)
+
+// ─── Template / Box ──────────────────────────────────────────────────────────
+
+export const TemplateMetadataSchema = z.object({
+    hash: z.string().optional(),
+    updatedAt: z.string().optional(),
+    updatedBy: z.string().optional(),
+    version: z.string().optional(),
+}).passthrough()
+
+export const TemplateSchema = z.object({
+    name: z.string(),
+    value: z.string(),
+}).passthrough()
+
+export const StageSchema = z.object({
+    template: TemplateSchema,
+    metadata: TemplateMetadataSchema.optional(),
+}).passthrough()
+
+export const BoxSchema = z.object({
+    service: z.string(),
+    stage: z.record(z.string(), StageSchema),
+}).passthrough()
+
+export const BoxArraySchema = z.array(BoxSchema)
 
 // ─── Prefix Config ───────────────────────────────────────────────────────────
 

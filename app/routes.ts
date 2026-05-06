@@ -15,5 +15,6 @@ export default [
         route(":service/:stage/:template", "routes/template/template.tsx") ,
         route(":service?/new", "routes/template/create.tsx") ,
         route(":service/:stage/:template/build", "routes/template/build.tsx") ,
+        route("diff", "routes/template/diff.tsx") ,
     ])
 ] satisfies RouteConfig;

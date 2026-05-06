@@ -18,7 +18,7 @@ import {ActionButtons} from "~/entry/components/action-buttons";
 import {useEntry} from "~/entry/use-entry";
 import {toast} from "sonner";
 import type {EntryActionResponse} from "~/entry/entry.validations";
-import {useRetrieveSecret} from "~/entry/use-retrieve-secret";
+import {SecretCacheProvider, useRetrieveSecret} from "~/entry/use-retrieve-secret";
 import type {Route} from "./+types/entry";
 import {FunError} from "~/components/ui/error";
 
@@ -48,8 +48,10 @@ function getPrefix(request: Request) {
 export async function loader({request}: LoaderFunctionArgs) {
     await requireAuthCookie(request)
     const prefix = getPrefix(request)
-    const [entries = [], prefixes] = await Repository.entry.retrieve(request, prefix)
-    const environments =   await Repository.entry.retrieveEnvironments(request)
+    const [[entries = [], prefixes], environments] = await Promise.all([
+        Repository.entry.retrieve(request, prefix),
+        Repository.entry.retrieveEnvironments(request),
+    ])
     return {
         prefixes: prefixes,
         prefix,
@@ -59,6 +61,14 @@ export async function loader({request}: LoaderFunctionArgs) {
 }
 
 export default function Entry() {
+    return (
+        <SecretCacheProvider>
+            <EntryView/>
+        </SecretCacheProvider>
+    )
+}
+
+function EntryView() {
     const {prefixes = [], prefix = "", entries: initialEntries = [] , initialsPrefixes} = useLoaderData<typeof loader>();
     const { addPaths, tree } = useTree();
     const { setSidebar, setHeaderActions, setNavExtra, setCurrentPath, currentPath} = useLayout();

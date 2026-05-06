@@ -1,4 +1,4 @@
-import {Button} from "../../components/ui/button"
+import {Button} from "~/components/ui/button"
 import {Layers, Pencil, Plus, Save, Upload, X} from "lucide-react"
 import {CreateVariableModal} from "./create-variable-modal"
 import {BulkEditSheet} from "./bulk-edit-sheet"
@@ -22,7 +22,7 @@ export function ActionButtons({
                                   onEditAll,
                                   onSaveAll,
                                   onCancelAll,
-                              }: EnhancedActionButtonsProps) {
+                              }: Readonly<EnhancedActionButtonsProps>) {
 
     return (
         <div className="flex items-center gap-2">

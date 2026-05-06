@@ -1,7 +1,7 @@
-import {useCallback, useRef} from "react";
+import {createContext, type ReactNode, useCallback, useContext, useRef} from "react";
 import {toast} from "sonner";
 
-async function retrieveSecret(path: string): Promise<string> {
+async function fetchSecret(path: string): Promise<string> {
     const response = await fetch(`/api/get-secret?keyPath=${encodeURIComponent(path)}`);
     if (!response.ok) {
         throw new Error(`Failed to fetch secret. Status: ${response.status}`);
@@ -9,7 +9,15 @@ async function retrieveSecret(path: string): Promise<string> {
     return await response.json();
 }
 
-export function useRetrieveSecret() {
+interface SecretCache {
+    getSecret: (path: string) => Promise<string | undefined>;
+    invalidateSecret: (path: string) => void;
+    invalidateAll: () => void;
+}
+
+const SecretCacheContext = createContext<SecretCache | null>(null);
+
+export function SecretCacheProvider({children}: {children: ReactNode}) {
     const cacheRef = useRef<Map<string, string>>(new Map());
     const inFlightRef = useRef<Set<string>>(new Set());
 
@@ -22,7 +30,7 @@ export function useRetrieveSecret() {
         }
         inFlightRef.current.add(path);
         try {
-            const secretValue = await retrieveSecret(path);
+            const secretValue = await fetchSecret(path);
             cacheRef.current.set(path, secretValue);
             return secretValue;
         } catch (error) {
@@ -42,5 +50,17 @@ export function useRetrieveSecret() {
         cacheRef.current.clear();
     }, []);
 
-    return {getSecret, invalidateSecret, invalidateAll}
+    return (
+        <SecretCacheContext.Provider value={{getSecret, invalidateSecret, invalidateAll}}>
+            {children}
+        </SecretCacheContext.Provider>
+    );
+}
+
+export function useRetrieveSecret(): SecretCache {
+    const ctx = useContext(SecretCacheContext);
+    if (!ctx) {
+        throw new Error("useRetrieveSecret must be used inside <SecretCacheProvider>");
+    }
+    return ctx;
 }

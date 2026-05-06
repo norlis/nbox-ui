@@ -154,10 +154,10 @@ export default function TemplateRoute() {
     return (
         <>
 
-            <div className="flex h-screen">
-                <div className="flex-1 flex flex-col">
-                    <div className="flex-1 flex overflow-hidden">
-                        <main className="flex-1 overflow-auto p-6">
+            <div className="flex h-full">
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex-1 flex overflow-hidden min-h-0">
+                        <main className="flex-1 overflow-auto p-6 min-h-0">
                             <Outlet/>
                         </main>
                     </div>
